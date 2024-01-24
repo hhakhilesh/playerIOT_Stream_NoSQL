@@ -1,7 +1,6 @@
-## requirements :
-## from random import uniform
-## import streamschema_pb2
-## import time
+from random import uniform
+import streamschema_pb2
+import time
 
 class Footballer:
 
