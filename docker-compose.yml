@@ -8,16 +8,15 @@ services:
       - 2181:2181
 
   kafka:
-    restart: always
-    image: ches/kafka
-    hostname: localhost
+    image: confluentinc/cp-kafka
+    hostname: kafka
     ports:
-      - "9092:9092"
+      - 9092:9092
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: localhost
-      ZOOKEEPER_IP: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://192.168.178.78:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      ALLOW_PLAINTEXT_LISTENER: 1
-    
     depends_on:
       - zookeeper
