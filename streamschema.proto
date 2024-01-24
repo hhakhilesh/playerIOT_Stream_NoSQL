@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package streamschema;
+
+message Data2d {
+    float x = 1;
+    float y = 2;
+}
+
+message Footballer {
+    string name = 1;
+    string position = 3;
+    string strategy = 4;
+}
+
+message Team {
+    string team = 1;
+    uint32 match = 2;
+}
+
+message Position {
+    uint64 sensorId = 1;
+    uint64 timestamp_usec = 2;
+    Data2d position = 3;
+    Footballer player = 4;
+    Team matchdetails = 5;
+}
+
