@@ -5,8 +5,10 @@ from player_simulator import Footballer
 from confluent_kafka import Producer
 
 def delivery_report(err, msg):
+
     """ Called once for each message produced to indicate delivery result.
         Triggered by poll() or flush(). """
+
     if err is not None:
         print('Message delivery failed: {}'.format(err))
     else:
@@ -21,24 +23,36 @@ def main(bootstrap_servers):
     producer = Producer(producer_config)
 
     player_1 = Footballer("Krish","CB","A")
-    player_1.enterMatch(strategy="Aggressive",match=1,sensor_id=1)
+    player_1.enterMatch(strategy="Aggressive", match=1, sensor_id=1)
 
     player_2 = Footballer("Van","RF","A")
-    player_2.enterMatch(strategy="Aggressive",match=1,sensor_id=2)
+    player_2.enterMatch(strategy="Conservative", match=1, sensor_id=2)
+
+    player_3 = Footballer("Rajkumar","CM","B")
+    player_3.enterMatch(strategy="Defensive", match=1, sensor_id=3)
+    
+    player_4 = Footballer("Gary","GK","B")
+    player_4.enterMatch(strategy="Conservative", match=1, sensor_id=4)
+
 
     for j in range(10):
 
         iot1 = player_1.move()
-        producer.produce(topic, value=iot1, callback=delivery_report)
+        producer.produce(topic[0], value=iot1, callback=delivery_report)
         iot2 = player_2.move()
-        producer.produce(topic, value=iot2, callback=delivery_report)
+        producer.produce(topic[0], value=iot2, callback=delivery_report)
+        iot3 = player_3.move()
+        producer.produce(topic[1], value=iot3, callback=delivery_report)
+        iot4 = player_4.move()
+        producer.produce(topic[1], value=iot4, callback=delivery_report)
+
+        time.sleep(1)
 
     producer.flush()
 
 
-
 if __name__ == "__main__":
+
     bootstrap_servers= "192.168.178.78:9092"
-    topic = "topic1"
+    topic = ["leagueA","leagueB"]
     main(bootstrap_servers)
-    
