@@ -2,10 +2,10 @@ from confluent_kafka import KafkaException
 from confluent_kafka.admin import AdminClient, NewTopic
 
 
-def run():
+def run(topic,bootstrap_servers):
 
     admin_config = {
-        'bootstrap.servers': '192.168.178.78:9092'
+        'bootstrap.servers': bootstrap_servers
     }
 
     admin_client = AdminClient(admin_config)
@@ -13,16 +13,22 @@ def run():
     exsiting_topics = admin_client.list_topics().topics
 
     print(exsiting_topics)
-    if "topic1" in exsiting_topics:
-        print("topic1 already exists")
+    
+    if any(item in topic for item in exsiting_topics):
+        print("topic already exists")
         return
-    new_topic = NewTopic(topic="topic1",num_partitions=1,replication_factor=1)
 
-    admin_client.create_topics([new_topic])
+    new_topics = [NewTopic(topic=t,num_partitions=2,replication_factor=1) for t in topic]
+
+    admin_client.create_topics(new_topics)
     print("line22")
     exsiting_topic = admin_client.list_topics().topics
-    
     print(exsiting_topic)
+
 if __name__ == "__main__":
-    run()
+    ## Create topic based on the league/team.
+    topic=["leagueA","leagueB"]
+
+    bootstrap_servers= '192.168.178.78:9092'
+    run(topic =topic,bootstrap_servers=bootstrap_servers)
 
