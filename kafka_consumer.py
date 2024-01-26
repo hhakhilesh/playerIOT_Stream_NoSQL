@@ -1,6 +1,35 @@
 from confluent_kafka import Consumer, KafkaException
+import streamschema_pb2
+import asyncio
+import pymongo
 
-def consume_partition_messages(bootstrap_servers, group_id, topic, num_partitions):
+def writetoCollection(msg,collection):
+    
+    # Deserialize using protobuf
+    print("After Parsing")
+    position_instance =streamschema_pb2.Position()
+    position_message = position_instance.ParseFromString(msg)
+    print(position_message)
+
+
+    ## MongoDB
+    document = {
+        "name":position_instance.player_info.name,
+        "role":position_instance.player_info.role,
+        "strategy":position_instance.player_info.strategy,
+        "match":position_instance.match_info.match,
+        "sensor_id":position_instance.sensor_id,
+        "location":{
+            "x":position_instance.location.x,
+            "y":position_instance.location.y,
+            "time": position_instance.timestamp_usec,
+        }
+    }
+    print(document)
+    inserted_document = collection.insert_one(document)
+    print(inserted_document.inserted_id)
+
+async def consume_partition_messages(bootstrap_servers, group_id, topic, num_partitions):
     # Consumer configuration
     consumer_config = {
         'bootstrap.servers': bootstrap_servers,
@@ -16,11 +45,11 @@ def consume_partition_messages(bootstrap_servers, group_id, topic, num_partition
     # Subscribe each consumer
     for consumer in consumers:
         consumer.subscribe([topic])
-        
-    # for i, consumer in enumerate(consumers):
-        
-    #     partitions = [i % num_partitions]  # Distribute partitions among consumers
-    #     consumer.subscribe([topic], on_assign=lambda x: print(f'Consumer {i} partitions assigned: {x}'), partitions=partitions)
+
+    # MongoDB Client
+    mongo_client = pymongo.MongoClient(db_addr)
+    database = mongo_client[db_name]
+    collection = database[topic]
 
     try:
         while True:
@@ -32,7 +61,7 @@ def consume_partition_messages(bootstrap_servers, group_id, topic, num_partition
                     # Access the message value
                     message_value = msg.value()
                     # Print the received message
-                    print(f'Consumer {consumer} received message: {message_value}')
+                    writetoCollection(message_value,collection)
 
                     # Manually commit offsets after processing each message
                     consumer.commit()
@@ -45,6 +74,13 @@ def consume_partition_messages(bootstrap_servers, group_id, topic, num_partition
         for consumer in consumers:
             consumer.close()
 
+async def main(bootstrap_servers,num_partitions_per_topic,leagueA_group_id,leagueA_topic,leagueB_group_id,leagueB_topic):
+    
+    task1 = asyncio.create_task(consume_partition_messages(bootstrap_servers, leagueA_group_id, leagueA_topic, num_partitions_per_topic))
+    task2 = asyncio.create_task(consume_partition_messages(bootstrap_servers, leagueB_group_id, leagueB_topic, num_partitions_per_topic))
+
+    await asyncio.gather(task1,task2)
+    
 if __name__ == '__main__':
 
     bootstrap_servers = '192.168.178.78:9092'
@@ -53,9 +89,14 @@ if __name__ == '__main__':
     # Consume messages from partitions for leagueA
     leagueA_group_id = 'leagueA_consumer_group'
     leagueA_topic = 'leagueA'
-    consume_partition_messages(bootstrap_servers, leagueA_group_id, leagueA_topic, num_partitions_per_topic)
+    
 
     # Consume messages from partitions for leagueB
     leagueB_group_id = 'leagueB_consumer_group'
     leagueB_topic = 'leagueB'
-    consume_partition_messages(bootstrap_servers, leagueB_group_id, leagueB_topic, num_partitions_per_topic)
+
+    ## MongoDB database details
+    db_name = "season2024"
+    db_addr = "mongodb://localhost:27017/"
+    
+    asyncio.run(main(bootstrap_servers,num_partitions_per_topic,leagueA_group_id,leagueA_topic,leagueB_group_id,leagueB_topic))

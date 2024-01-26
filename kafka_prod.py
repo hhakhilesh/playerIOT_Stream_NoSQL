@@ -35,20 +35,22 @@ def main(bootstrap_servers):
     player_4.enterMatch(strategy="Conservative", match=1, sensor_id=4)
 
 
-    for j in range(10):
+    while(True):
 
         iot1 = player_1.move()
-        producer.produce(topic[0], value=iot1, callback=delivery_report)
+        producer.produce(topic[0], value=iot1, partition=0, callback=delivery_report)
         iot2 = player_2.move()
-        producer.produce(topic[0], value=iot2, callback=delivery_report)
+        producer.produce(topic[0], value=iot2, partition=1, callback=delivery_report)
         iot3 = player_3.move()
-        producer.produce(topic[1], value=iot3, callback=delivery_report)
+        producer.produce(topic[1], value=iot3, partition=0, callback=delivery_report)
         iot4 = player_4.move()
-        producer.produce(topic[1], value=iot4, callback=delivery_report)
-
+        producer.produce(topic[1], value=iot4, partition=1, callback=delivery_report)
+        
+        producer.flush()
+        
         time.sleep(1)
 
-    producer.flush()
+  
 
 
 if __name__ == "__main__":

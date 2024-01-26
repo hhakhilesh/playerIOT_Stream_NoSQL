@@ -31,13 +31,16 @@ class Footballer:
         proto_instance = streamschema_pb2.Position() # streamschema
         proto_instance.sensor_id = self.sensor_id
         proto_instance.timestamp_usec = int(time.mktime(time.gmtime()))
+        
         proto_instance.location.x = self.x
         proto_instance.location.x = self.y
+        
         proto_instance.player_info.name = self.name
         proto_instance.player_info.role = self.role
         proto_instance.player_info.strategy = self.strategy
+        
         proto_instance.match_info.team = self.team
-        proto_instance.match_info.team = str(self.match)
+        proto_instance.match_info.match = str(self.match)
 
         serial_message = proto_instance.SerializeToString()
         return serial_message
