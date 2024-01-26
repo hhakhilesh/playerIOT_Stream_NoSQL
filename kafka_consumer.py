@@ -3,7 +3,7 @@ import streamschema_pb2
 import asyncio
 import pymongo
 
-def writetoCollection(msg,collection):
+def write_to_collection(msg,collection):
     
     # Deserialize using protobuf
     print("After Parsing")
@@ -61,7 +61,7 @@ async def consume_partition_messages(bootstrap_servers, group_id, topic, num_par
                     # Access the message value
                     message_value = msg.value()
                     # Print the received message
-                    writetoCollection(message_value,collection)
+                    write_to_collection(message_value,collection)
 
                     # Manually commit offsets after processing each message
                     consumer.commit()
